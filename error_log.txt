@@ -1,0 +1,293 @@
+﻿python : 07:45:45 [INFO] 
+main: \u2550\u2550\u2550\u2
+550\u2550\u2550\u2550\u2550
+\u2550\u2550\u2550\u2550\u2
+550\u2550\u2550\u2550\u2550
+\u2550\u2550\u2550\u2550\u2
+550\u2550\u2550\u2550\u2550
+\u2550\u2550\u2550\u2550\u2
+550\u2550\u2550\u2550\u2550
+\u2550\u2550\u2550\u2550\u2
+550\u2550\u2550\u2550\u2550
+\u2550\u2550\u2550\u2550\u2
+550\u2550\u2550\u2550\u2550
+\u2550\u2550\u2550\u2550\u2
+550\u2550\u2550
+At line:1 char:1
++ python main.py 2>&1 | 
+Out-File -FilePath 
+error_log.txt -Encoding 
+utf8
++ ~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: (07:  
+  45:45 [INFO]...550\u25   
+ 50\u2550:String) [], R    
+emoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+07:45:45 [INFO] main:   
+Camera-Based Full Body 
+Tracker
+07:45:45 [INFO] main: \u255
+0\u2550\u2550\u2550\u2550\u
+2550\u2550\u2550\u2550\u255
+0\u2550\u2550\u2550\u2550\u
+2550\u2550\u2550\u2550\u255
+0\u2550\u2550\u2550\u2550\u
+2550\u2550\u2550\u2550\u255
+0\u2550\u2550\u2550\u2550\u
+2550\u2550\u2550\u2550\u255
+0\u2550\u2550\u2550\u2550\u
+2550\u2550\u2550\u2550\u255
+0\u2550\u2550\u2550\u2550\u
+2550\u2550\u2550\u2550\u255
+0\u2550\u2550\u2550\u2550\u
+2550
+07:45:45 [INFO] main:   
+Camera:     0
+07:45:45 [INFO] main:   
+Resolution: 640x480 @ 30 
+FPS
+07:45:45 [INFO] main:   
+Max Poses:  5
+07:45:45 [INFO] main:   
+Height:     177.8 cm
+07:45:45 [INFO] main:   
+OSC:        OFF \u2192 
+127.0.0.1:9000
+07:45:45 [INFO] main:   
+Dashboard:  
+http://localhost:8765
+07:45:45 [INFO] main: \u255
+0\u2550\u2550\u2550\u2550\u
+2550\u2550\u2550\u2550\u255
+0\u2550\u2550\u2550\u2550\u
+2550\u2550\u2550\u2550\u255
+0\u2550\u2550\u2550\u2550\u
+2550\u2550\u2550\u2550\u255
+0\u2550\u2550\u2550\u2550\u
+2550\u2550\u2550\u2550\u255
+0\u2550\u2550\u2550\u2550\u
+2550\u2550\u2550\u2550\u255
+0\u2550\u2550\u2550\u2550\u
+2550\u2550\u2550\u2550\u255
+0\u2550\u2550\u2550\u2550\u
+2550
+INFO:     Started server 
+process [29868]
+INFO:     Waiting for 
+application startup.
+07:45:46 [INFO] 
+src.detector: Using 
+MediaPipe Tasks API 
+(model: D:\IdeaProjects\apr
+il\mini-project-sem-6\pose_
+landmarker.task)
+WARNING: All log messages 
+before 
+absl::InitializeLog() is 
+called are written to 
+STDERR
+I0000 
+00:00:1775009747.828651   
+50564 port.cc:153] oneDNN 
+custom operations are on. 
+You may see slightly 
+different numerical 
+results due to 
+floating-point round-off 
+errors from different 
+computation orders. To 
+turn them off, set the 
+environment variable 
+`TF_ENABLE_ONEDNN_OPTS=0`.
+ERROR:    Traceback (most 
+recent call last):
+  File "C:\Users\ASUS\AppDa
+ta\Local\Programs\Python\Py
+thon310\lib\site-packages\s
+tarlette\routing.py", line 
+638, in lifespan
+    async with 
+self.lifespan_context(app) 
+as maybe_state:
+  File "C:\Users\ASUS\AppDa
+ta\Local\Programs\Python\Py
+thon310\lib\site-packages\f
+astapi\routing.py", line 
+241, in __aenter__
+    await 
+self._router._startup()
+  File "C:\Users\ASUS\AppDa
+ta\Local\Programs\Python\Py
+thon310\lib\site-packages\f
+astapi\routing.py", line 
+4884, in _startup
+    await handler()
+  File "D:\IdeaProjects\apr
+il\mini-project-sem-6\src\s
+erver.py", line 158, in 
+startup
+    _pipeline = 
+TrackingPipeline(_config)
+  File "D:\IdeaProjects\apr
+il\mini-project-sem-6\src\p
+ipeline.py", line 39, in 
+__init__
+    self.detector = 
+PoseDetector(config)
+  File "D:\IdeaProjects\apr
+il\mini-project-sem-6\src\d
+etector.py", line 33, in 
+__init__
+    self._impl: 
+_DetectorBase = 
+_create_detector(config)
+  File "D:\IdeaProjects\apr
+il\mini-project-sem-6\src\d
+etector.py", line 84, in 
+_create_detector
+    return 
+_TasksDetector(config)
+  File "D:\IdeaProjects\apr
+il\mini-project-sem-6\src\d
+etector.py", line 93, in 
+__init__
+    from 
+mediapipe.tasks.python 
+import vision as vis
+  File "C:\Users\ASUS\AppDa
+ta\Local\Programs\Python\Py
+thon310\lib\site-packages\m
+ediapipe\__init__.py", 
+line 17, in <module>
+    import 
+mediapipe.tasks.python as 
+tasks
+  File "C:\Users\ASUS\AppDa
+ta\Local\Programs\Python\Py
+thon310\lib\site-packages\m
+ediapipe\tasks\python\__ini
+t__.py", line 17, in 
+<module>
+    from . import audio
+  File "C:\Users\ASUS\AppDa
+ta\Local\Programs\Python\Py
+thon310\lib\site-packages\m
+ediapipe\tasks\python\audio
+\__init__.py", line 18, in 
+<module>
+    import mediapipe.tasks.
+python.audio.audio_classifi
+er
+  File "C:\Users\ASUS\AppDa
+ta\Local\Programs\Python\Py
+thon310\lib\site-packages\m
+ediapipe\tasks\python\audio
+\audio_classifier.py", 
+line 26, in <module>
+    from mediapipe.tasks.py
+thon.audio.core import 
+base_audio_task_api
+  File "C:\Users\ASUS\AppDa
+ta\Local\Programs\Python\Py
+thon310\lib\site-packages\m
+ediapipe\tasks\python\audio
+\core\base_audio_task_api.p
+y", line 25, in <module>
+    from mediapipe.tasks.py
+thon.core.optional_dependen
+cies import doc_controls
+  File "C:\Users\ASUS\AppDa
+ta\Local\Programs\Python\Py
+thon310\lib\site-packages\m
+ediapipe\tasks\python\core\
+optional_dependencies.py", 
+line 20, in <module>
+    from 
+tensorflow.tools.docs 
+import doc_controls
+  File "C:\Users\ASUS\AppDa
+ta\Local\Programs\Python\Py
+thon310\lib\site-packages\t
+ensorflow\__init__.py", 
+line 49, in <module>
+    from 
+tensorflow._api.v2 import 
+__internal__
+  File "C:\Users\ASUS\AppDa
+ta\Local\Programs\Python\Py
+thon310\lib\site-packages\t
+ensorflow\_api\v2\__interna
+l__\__init__.py", line 8, 
+in <module>
+    from tensorflow._api.v2
+.__internal__ import 
+autograph
+  File "C:\Users\ASUS\AppDa
+ta\Local\Programs\Python\Py
+thon310\lib\site-packages\t
+ensorflow\_api\v2\__interna
+l__\autograph\__init__.py",
+ line 8, in <module>
+    from tensorflow.python.
+autograph.core.ag_ctx 
+import control_status_ctx 
+# line: 34
+  File "C:\Users\ASUS\AppDa
+ta\Local\Programs\Python\Py
+thon310\lib\site-packages\t
+ensorflow\python\autograph\
+core\ag_ctx.py", line 21, 
+in <module>
+    from tensorflow.python.
+autograph.utils import 
+ag_logging
+  File "C:\Users\ASUS\AppDa
+ta\Local\Programs\Python\Py
+thon310\lib\site-packages\t
+ensorflow\python\autograph\
+utils\__init__.py", line 
+17, in <module>
+    from tensorflow.python.
+autograph.utils.context_man
+agers import control_depend
+ency_on_returns
+  File "C:\Users\ASUS\AppDa
+ta\Local\Programs\Python\Py
+thon310\lib\site-packages\t
+ensorflow\python\autograph\
+utils\context_managers.py",
+ line 19, in <module>
+    from tensorflow.python.
+framework import ops
+  File "C:\Users\ASUS\AppDa
+ta\Local\Programs\Python\Py
+thon310\lib\site-packages\t
+ensorflow\python\framework\
+ops.py", line 33, in 
+<module>
+    from 
+tensorflow.core.framework 
+import attr_value_pb2
+  File "C:\Users\ASUS\AppDa
+ta\Local\Programs\Python\Py
+thon310\lib\site-packages\t
+ensorflow\core\framework\at
+tr_value_pb2.py", line 9, 
+in <module>
+    from google.protobuf 
+import runtime_version as 
+_runtime_version
+ImportError: cannot import 
+name 'runtime_version' 
+from 'google.protobuf' (C:\
+Users\ASUS\AppData\Local\Pr
+ograms\Python\Python310\lib
+\site-packages\google\proto
+buf\__init__.py)
+
+ERROR:    Application 
+startup failed. Exiting.

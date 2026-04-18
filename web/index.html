@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera FBT — Full Body Tracker</title>
+    <meta name="description" content="Real-time camera-based full body tracking system with 3D skeleton visualization">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+    <header id="app-header">
+        <div class="header-left">
+            <div class="logo-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="5" r="3"/>
+                    <line x1="12" y1="8" x2="12" y2="16"/>
+                    <line x1="8" y1="11" x2="16" y2="11"/>
+                    <line x1="12" y1="16" x2="8" y2="22"/>
+                    <line x1="12" y1="16" x2="16" y2="22"/>
+                </svg>
+            </div>
+            <h1>Camera FBT</h1>
+            <span class="version-badge">v1.0</span>
+        </div>
+        <div class="header-right">
+            <div class="status-dot" id="connection-dot"></div>
+            <span id="connection-text">Connecting…</span>
+        </div>
+    </header>
+
+    <main id="dashboard">
+        <!-- Left: Camera Feed -->
+        <section class="panel camera-panel" id="camera-section">
+            <div class="panel-header">
+                <h2>Camera Feed</h2>
+                <div class="panel-badge" id="persons-badge">0 persons</div>
+            </div>
+            <div class="camera-container">
+                <img id="camera-feed" alt="Camera Feed" />
+                <div class="camera-overlay" id="no-camera-overlay">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                    <p>Waiting for camera…</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Center: 3D Skeleton View -->
+        <section class="panel skeleton-panel" id="skeleton-section">
+            <div class="panel-header">
+                <h2>3D Skeleton</h2>
+                <div class="view-controls">
+                    <button class="view-btn active" data-view="front">Front</button>
+                    <button class="view-btn" data-view="side">Side</button>
+                    <button class="view-btn" data-view="top">Top</button>
+                </div>
+            </div>
+            <div id="skeleton-canvas-container"></div>
+        </section>
+
+        <!-- Right: Controls & Metrics -->
+        <section class="panel controls-panel" id="controls-section">
+            <!-- Performance Metrics -->
+            <div class="control-group">
+                <h3>Performance</h3>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <span class="metric-value" id="fps-value">0</span>
+                        <span class="metric-label">FPS</span>
+                        <div class="metric-bar"><div class="metric-fill" id="fps-bar"></div></div>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-value" id="latency-value">0</span>
+                        <span class="metric-label">Latency (ms)</span>
+                        <div class="metric-bar"><div class="metric-fill latency-fill" id="latency-bar"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tracker Status -->
+            <div class="control-group">
+                <h3>Trackers</h3>
+                <div class="tracker-grid" id="tracker-grid">
+                    <div class="tracker-item" data-tracker="hip"><span class="tracker-dot"></span>Hip</div>
+                    <div class="tracker-item" data-tracker="chest"><span class="tracker-dot"></span>Chest</div>
+                    <div class="tracker-item" data-tracker="left_foot"><span class="tracker-dot"></span>L.Foot</div>
+                    <div class="tracker-item" data-tracker="right_foot"><span class="tracker-dot"></span>R.Foot</div>
+                    <div class="tracker-item" data-tracker="left_knee"><span class="tracker-dot"></span>L.Knee</div>
+                    <div class="tracker-item" data-tracker="right_knee"><span class="tracker-dot"></span>R.Knee</div>
+                    <div class="tracker-item" data-tracker="left_elbow"><span class="tracker-dot"></span>L.Elbow</div>
+                    <div class="tracker-item" data-tracker="right_elbow"><span class="tracker-dot"></span>R.Elbow</div>
+                    <div class="tracker-item" data-tracker="head"><span class="tracker-dot"></span>Head</div>
+                </div>
+            </div>
+
+            <!-- Calibration -->
+            <div class="control-group">
+                <h3>Calibration</h3>
+                <div class="calib-status" id="calib-status">
+                    <span class="calib-dot uncalibrated"></span>
+                    <span id="calib-text">Not calibrated</span>
+                </div>
+                <button class="btn btn-primary" id="calibrate-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                    </svg>
+                    Calibrate (T-Pose)
+                </button>
+                <p class="hint">Stand in T-pose and press calibrate</p>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="control-group">
+                <h3>Smoothing</h3>
+                <div class="slider-group">
+                    <label>Jitter Reduction</label>
+                    <input type="range" id="filter-cutoff" min="0.1" max="5.0" step="0.1" value="1.7">
+                    <span class="slider-val" id="cutoff-val">1.7</span>
+                </div>
+                <div class="slider-group">
+                    <label>Responsiveness</label>
+                    <input type="range" id="filter-beta" min="0.0" max="0.1" step="0.001" value="0.007">
+                    <span class="slider-val" id="beta-val">0.007</span>
+                </div>
+            </div>
+
+            <!-- OSC Output -->
+            <div class="control-group">
+                <h3>OSC Output</h3>
+                <div class="osc-controls">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="osc-toggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span id="osc-status-text">Disabled</span>
+                </div>
+                <div class="osc-fields">
+                    <input type="text" id="osc-ip" value="127.0.0.1" placeholder="IP Address">
+                    <input type="number" id="osc-port" value="9000" placeholder="Port">
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/js/skeleton3d.js"></script>
+    <script src="/static/js/metrics.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
