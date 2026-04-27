@@ -83,11 +83,13 @@ def _draw_skeleton_overlay(frame: np.ndarray, result) -> np.ndarray:
                     if la.visibility > 0.3 and lb.visibility > 0.3:
                         p1 = (int(la.x * w), int(la.y * h))
                         p2 = (int(lb.x * w), int(lb.y * h))
-                        cv2.line(overlay, p1, p2, color, 2, cv2.LINE_AA)
+                        cv2.line(overlay, p1, p2, (255, 255, 255), 6, cv2.LINE_AA)
+                        cv2.line(overlay, p1, p2, color, 4, cv2.LINE_AA)
 
             for j, lm in enumerate(lms):
                 if lm.visibility > 0.3:
                     pt = (int(lm.x * w), int(lm.y * h))
+                    cv2.circle(overlay, pt, 6, (255, 255, 255), -1, cv2.LINE_AA)
                     cv2.circle(overlay, pt, 4, color, -1, cv2.LINE_AA)
 
             if len(lms) > LI.NOSE and lms[LI.NOSE].visibility > 0.3:

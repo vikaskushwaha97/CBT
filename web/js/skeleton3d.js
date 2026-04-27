@@ -52,9 +52,16 @@ class SkeletonRenderer {
         // Lighting
         const ambient = new THREE.AmbientLight(0x404060, 0.6);
         this.scene.add(ambient);
-        const directional = new THREE.DirectionalLight(0xffffff, 0.8);
+        const directional = new THREE.DirectionalLight(0xffffff, 0.9);
         directional.position.set(2, 4, 3);
         this.scene.add(directional);
+        const hemisphere = new THREE.HemisphereLight(0x9fb8d8, 0x101827, 0.35);
+        this.scene.add(hemisphere);
+
+        // Shared geometry for performance
+        this.boneGeometry = new THREE.CylinderGeometry(1.0, 1.0, 1.0, 10, 1, true);
+        this.jointGeometry = new THREE.SphereGeometry(1.0, 16, 16);
+        this.trackerGeometry = new THREE.SphereGeometry(1.0, 16, 16);
 
         // Grid floor
         this._addGrid();
@@ -129,6 +136,27 @@ class SkeletonRenderer {
         this.camera.lookAt(0, 0.8, 0);
     }
 
+    _createBoneMesh(a, b, color) {
+        const dir = new THREE.Vector3().subVectors(b, a);
+        const length = dir.length();
+        if (length < 0.01) return null;
+
+        const mesh = new THREE.Mesh(this.boneGeometry, new THREE.MeshStandardMaterial({
+            color,
+            metalness: 0.15,
+            roughness: 0.45,
+            emissive: color,
+            emissiveIntensity: 0.06,
+        }));
+        mesh.scale.set(0.018, length, 0.018);
+        mesh.position.copy(a).addScaledVector(dir, 0.5);
+        mesh.quaternion.setFromUnitVectors(
+            new THREE.Vector3(0, 1, 0),
+            dir.clone().normalize()
+        );
+        return mesh;
+    }
+
     setView(view) {
         switch (view) {
             case 'front':
@@ -188,45 +216,48 @@ class SkeletonRenderer {
             const lms = person.landmarks;
             if (!lms || lms.length < 33) continue;
 
-            // Draw bones
-            const boneMat = new THREE.LineBasicMaterial({ color: color, linewidth: 2 });
+            // Draw bones as solid segments
             for (const [a, b] of BONE_CONNECTIONS) {
                 const la = lms[a], lb = lms[b];
                 if (la.vis < 0.3 || lb.vis < 0.3) continue;
-
-                const geom = new THREE.BufferGeometry();
-                // Convert: x stays, y = -y (flip up), z = -z (left-handed)
-                const verts = new Float32Array([
-                    la.x, -la.y, -la.z,
-                    lb.x, -lb.y, -lb.z,
-                ]);
-                geom.setAttribute('position', new THREE.BufferAttribute(verts, 3));
-                group.add(new THREE.Line(geom, boneMat));
+                const p1 = new THREE.Vector3(la.x, -la.y, -la.z);
+                const p2 = new THREE.Vector3(lb.x, -lb.y, -lb.z);
+                const bone = this._createBoneMesh(p1, p2, color);
+                if (bone) group.add(bone);
             }
 
             // Draw joint spheres
-            const jointGeom = new THREE.SphereGeometry(0.012, 8, 8);
-            const jointMat = new THREE.MeshPhongMaterial({
-                color: color, emissive: color, emissiveIntensity: 0.3
+            const jointMat = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                emissive: color,
+                emissiveIntensity: 0.2,
+                metalness: 0.1,
+                roughness: 0.3,
             });
             for (let i = 0; i < lms.length; i++) {
                 const lm = lms[i];
                 if (lm.vis < 0.3) continue;
-                const sphere = new THREE.Mesh(jointGeom, jointMat);
+                const sphere = new THREE.Mesh(this.jointGeometry, jointMat);
+                sphere.scale.setScalar(0.018);
                 sphere.position.set(lm.x, -lm.y, -lm.z);
                 group.add(sphere);
             }
 
             // Draw tracker spheres (larger, glowing)
             if (person.trackers) {
-                const trackerGeom = new THREE.SphereGeometry(0.025, 12, 12);
-                const trackerMat = new THREE.MeshPhongMaterial({
-                    color: 0x22c55e, emissive: 0x22c55e, emissiveIntensity: 0.5,
-                    transparent: true, opacity: 0.8,
+                const trackerMat = new THREE.MeshStandardMaterial({
+                    color: 0x22c55e,
+                    emissive: 0x22c55e,
+                    emissiveIntensity: 0.55,
+                    transparent: true,
+                    opacity: 0.85,
+                    metalness: 0.2,
+                    roughness: 0.25,
                 });
                 for (const [name, data] of Object.entries(person.trackers)) {
                     const pos = data.pos;
-                    const sphere = new THREE.Mesh(trackerGeom, trackerMat);
+                    const sphere = new THREE.Mesh(this.trackerGeometry, trackerMat);
+                    sphere.scale.setScalar(0.03);
                     sphere.position.set(pos[0], pos[1], pos[2]);
                     group.add(sphere);
                 }
