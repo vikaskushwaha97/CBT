@@ -69,6 +69,17 @@ class AppConfig:
     server_host: str = _env("FBT_HOST", "0.0.0.0")
     server_port: int = _env("FBT_PORT", 8765, int)
 
+    # ── IMU Sensors (ESP32 + MPU-6050 over WiFi UDP) ───────────────────────
+    imu_enabled: bool = _env("FBT_IMU_ENABLED", False, bool)
+    imu_port: int = _env("FBT_IMU_PORT", 6969, int)        # UDP listen port
+    imu_sensor_count: int = _env("FBT_IMU_COUNT", 3, int)  # expected sensors
+    imu_timeout_s: float = _env("FBT_IMU_TIMEOUT", 2.0, float)  # dead sensor threshold
+    # Complementary filter: how much to trust IMU yaw vs camera yaw correction
+    # 0.0 = full camera correction every frame, 1.0 = no correction (pure IMU)
+    imu_yaw_alpha: float = _env("FBT_IMU_YAW_ALPHA", 0.97, float)
+    # source_mode: "camera" | "imu" | "hybrid"
+    source_mode: str = _env("FBT_SOURCE_MODE", "camera", str)
+
     # ── Paths (resolved at runtime) ─────────────────────────────────────────
     project_root: str = field(default="", init=False)
 
@@ -98,6 +109,13 @@ class AppConfig:
             config.num_poses = args.poses
         if hasattr(args, "port") and args.port is not None:
             config.server_port = args.port
+        if hasattr(args, "imu") and args.imu:
+            config.imu_enabled = True
+            config.source_mode = "hybrid"
+        if hasattr(args, "imu_port") and args.imu_port is not None:
+            config.imu_port = args.imu_port
+        if hasattr(args, "imu_count") and args.imu_count is not None:
+            config.imu_sensor_count = args.imu_count
         return config
 
     def validate(self) -> list[str]:
@@ -115,4 +133,11 @@ class AppConfig:
             errors.append("user_height_cm must be in [100, 250]")
         if self.num_poses < 1 or self.num_poses > 10:
             errors.append("num_poses must be in [1, 10]")
+        if self.imu_enabled:
+            if not (1024 <= self.imu_port <= 65535):
+                errors.append("imu_port must be in [1024, 65535]")
+            if not (0 < self.imu_sensor_count <= 8):
+                errors.append("imu_sensor_count must be in [1, 8]")
+            if self.source_mode not in ("camera", "imu", "hybrid"):
+                errors.append("source_mode must be 'camera', 'imu', or 'hybrid'")
         return errors

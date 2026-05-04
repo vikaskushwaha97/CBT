@@ -167,10 +167,16 @@ class SkeletonSolver:
                     (pos[1] + np_[1]) / 2,
                     (pos[2] + np_[2]) / 2,
                 )
+                # Head yaw: direction from left ear to right ear
+                ul_ear = to_unity(l_ear)
+                ur_ear = to_unity(r_ear)
+                dx = ur_ear[0] - ul_ear[0]
+                dz = ur_ear[2] - ul_ear[2]
+                head_yaw = math.degrees(math.atan2(dx, dz))
+                rot = (0.0, head_yaw, 0.0)
             else:
                 pos = to_unity(nose)
-
-            rot = (0.0, 0.0, 0.0)  # Head rotation is optional per VRChat spec
+                rot = (0.0, 0.0, 0.0)
             trackers[TrackerID.HEAD] = TrackerData(position=pos, rotation=rot)
 
         return trackers
@@ -184,6 +190,11 @@ class SkeletonSolver:
         """
         Compute Euler angles (degrees) for a bone segment.
         Applied in Z → X → Y order per VRChat spec.
+
+        Now computes all three axes (pitch, yaw, roll) so that lateral
+        body lean (roll) is captured from camera data.
+        When IMU sensors are available, these camera estimates are replaced
+        by the more accurate sensor quaternions in pipeline._apply_imu_rotations.
         """
         dx = child[0] - parent[0]
         dy = child[1] - parent[1]
@@ -193,9 +204,19 @@ class SkeletonSolver:
         if length < 1e-6:
             return (0.0, 0.0, 0.0)
 
-        # Simplified rotation: pitch (X) and yaw (Y) from direction vector
-        pitch = math.degrees(math.asin(max(-1, min(1, -dy / length))))
+        # Pitch: elevation angle (X-axis rotation)
+        pitch = math.degrees(math.asin(max(-1.0, min(1.0, -dy / length))))
+        # Yaw: horizontal direction (Y-axis rotation)
         yaw = math.degrees(math.atan2(dx, dz))
-        roll = 0.0
+        # Roll: lateral lean, computed from the segment's own horizontal tilt
+        # For vertical bones (legs, spine): roll = lean left/right
+        # For lateral bones (shoulders, hips): roll = elevation difference
+        if axis == "vertical":
+            # Roll from how much the segment tilts left/right vs its vertical plane
+            horiz = math.sqrt(dx * dx + dz * dz)
+            roll = math.degrees(math.atan2(dx, max(horiz, 1e-6)) * 0.3)  # damped
+        else:
+            # Lateral segments: roll = elevation difference end-to-end
+            roll = math.degrees(math.atan2(dy, max(abs(dx), 1e-6)))
 
         return (pitch, yaw, roll)

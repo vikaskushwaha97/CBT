@@ -2,10 +2,12 @@
 models.py — Core data structures for Camera-Based Full Body Tracking.
 
 Provides typed, immutable data containers used across every module.
+Extended with IMU sensor data types for ESP32 + MPU-6050 hybrid tracking.
 """
 
 from __future__ import annotations
 
+import math
 import time
 from dataclasses import dataclass, field
 from enum import Enum, IntEnum
@@ -124,6 +126,8 @@ class FrameResult:
     num_persons: int = 0
     osc_active: bool = False
     calibrated: bool = False
+    imu_active: bool = False                                # True when IMU sensors contributing
+    sensor_states: list[SensorState] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         """Serialize to JSON-safe dict for WebSocket transmission."""
@@ -157,6 +161,17 @@ class FrameResult:
             "num_persons": self.num_persons,
             "osc_active": self.osc_active,
             "calibrated": self.calibrated,
+            "imu_active": self.imu_active,
+            "sensors": [
+                {
+                    "id": s.sensor_id,
+                    "connected": s.is_connected,
+                    "latency_ms": round(s.latency_ms, 1),
+                    "packets": s.packet_count,
+                    "signal_ok": s.signal_ok,
+                }
+                for s in self.sensor_states
+            ],
         }
 
 
@@ -173,3 +188,100 @@ class CalibrationProfile:
     torso_length: float = 0.0
     hip_center: tuple[float, float, float] = (0.0, 0.0, 0.0)
     captured_at: float = 0.0
+
+
+# ── IMU Sensor Types (ESP32 + MPU-6050) ──────────────────────────────────────
+class SensorID(IntEnum):
+    """
+    Physical body placement of each IMU sensor node.
+    Minimum viable: HIP (0) + LEFT_ANKLE (4) + RIGHT_ANKLE (5).
+    """
+    HIP          = 0   # Pelvis center  — most critical tracker
+    CHEST        = 1   # Upper torso
+    LEFT_THIGH   = 2   # Left thigh (drives LEFT_KNEE tracker)
+    RIGHT_THIGH  = 3   # Right thigh (drives RIGHT_KNEE tracker)
+    LEFT_ANKLE   = 4   # Left foot orientation
+    RIGHT_ANKLE  = 5   # Right foot orientation
+    LEFT_WRIST   = 6   # Left wrist (drives LEFT_ELBOW tracker)
+    RIGHT_WRIST  = 7   # Right wrist (drives RIGHT_ELBOW tracker)
+
+
+# Maps sensor body placement → VR tracker slot
+SENSOR_TO_TRACKER: dict[SensorID, TrackerID] = {
+    SensorID.HIP:          TrackerID.HIP,
+    SensorID.CHEST:        TrackerID.CHEST,
+    SensorID.LEFT_THIGH:   TrackerID.LEFT_KNEE,
+    SensorID.RIGHT_THIGH:  TrackerID.RIGHT_KNEE,
+    SensorID.LEFT_ANKLE:   TrackerID.LEFT_FOOT,
+    SensorID.RIGHT_ANKLE:  TrackerID.RIGHT_FOOT,
+    SensorID.LEFT_WRIST:   TrackerID.LEFT_ELBOW,
+    SensorID.RIGHT_WRIST:  TrackerID.RIGHT_ELBOW,
+}
+
+
+@dataclass(slots=True)
+class IMUReading:
+    """
+    One UDP packet from an ESP32 + MPU-6050 node running DMP mode.
+
+    Binary wire format (48 bytes, little-endian):
+        magic_h  : uint8   0xCA
+        magic_l  : uint8   0xFE
+        sensor_id: uint8   SensorID (0-7)
+        ptype    : uint8   0x01 = quaternion+raw packet
+        qw,qx,qy,qz: float32 × 4  — DMP quaternion
+        ax,ay,az    : float32 × 3  — linear accel (g)
+        gx,gy,gz    : float32 × 3  — gyro (deg/s)
+        ts_ms    : uint32  — ESP32 millis()
+    """
+    sensor_id: int                          # SensorID value (0-7)
+    qw: float = 1.0                         # DMP quaternion w
+    qx: float = 0.0                         # DMP quaternion x
+    qy: float = 0.0                         # DMP quaternion y
+    qz: float = 0.0                         # DMP quaternion z
+    ax: float = 0.0                         # Linear accel X (g)
+    ay: float = 0.0                         # Linear accel Y (g)
+    az: float = 0.0                         # Linear accel Z (g)
+    gx: float = 0.0                         # Gyro X (deg/s)
+    gy: float = 0.0                         # Gyro Y (deg/s)
+    gz: float = 0.0                         # Gyro Z (deg/s)
+    sensor_timestamp_ms: int = 0            # ESP32 millis()
+    received_at: float = field(default_factory=time.time)
+
+    def to_euler_deg(self) -> tuple[float, float, float]:
+        """Convert DMP quaternion → (pitch, yaw, roll) in degrees."""
+        w, x, y, z = self.qw, self.qx, self.qy, self.qz
+        # Roll (rotation around X)
+        sinr = 2.0 * (w * x + y * z)
+        cosr = 1.0 - 2.0 * (x * x + y * y)
+        roll = math.degrees(math.atan2(sinr, cosr))
+        # Pitch (rotation around Y)
+        sinp = 2.0 * (w * y - z * x)
+        sinp = max(-1.0, min(1.0, sinp))
+        pitch = math.degrees(math.asin(sinp))
+        # Yaw (rotation around Z) — drifts without magnetometer
+        siny = 2.0 * (w * z + x * y)
+        cosy = 1.0 - 2.0 * (y * y + z * z)
+        yaw = math.degrees(math.atan2(siny, cosy))
+        return (pitch, yaw, roll)
+
+
+@dataclass
+class SensorState:
+    """Live connection + signal health of one IMU sensor node."""
+    sensor_id: int
+    is_connected: bool = False
+    last_packet_at: float = 0.0
+    packet_count: int = 0
+    last_reading: Optional[IMUReading] = None
+    yaw_correction_deg: float = 0.0         # Camera-provided yaw offset
+
+    @property
+    def latency_ms(self) -> float:
+        if self.last_packet_at == 0.0:
+            return 9999.0
+        return (time.time() - self.last_packet_at) * 1000.0
+
+    @property
+    def signal_ok(self) -> bool:
+        return self.is_connected and self.latency_ms < 500.0

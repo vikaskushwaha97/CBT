@@ -57,6 +57,11 @@ Examples:
     # Detection
     parser.add_argument("--poses", type=int, default=None, help="Max persons to track (default: 5)")
 
+    # IMU sensors
+    parser.add_argument("--imu", action="store_true", help="Enable IMU sensor fusion (ESP32 + MPU-6050)")
+    parser.add_argument("--imu-port", type=int, default=None, help="UDP port to listen for IMU packets (default: 6969)")
+    parser.add_argument("--imu-count", type=int, default=None, help="Expected number of IMU sensors (default: 3)")
+
     args = parser.parse_args()
 
     # Build config
@@ -79,8 +84,24 @@ Examples:
     logger.info("  Max Poses:  %d", config.num_poses)
     logger.info("  Height:     %.1f cm", config.user_height_cm)
     logger.info("  OSC:        %s → %s:%d", "ON" if config.osc_enabled else "OFF", config.osc_ip, config.osc_port)
+    logger.info("  IMU:        %s (port %d, %d sensors)",
+                "ON" if config.imu_enabled else "OFF", config.imu_port, config.imu_sensor_count)
+    logger.info("  Mode:       %s", config.source_mode)
     logger.info("  Dashboard:  http://localhost:%d", config.server_port)
     logger.info("═" * 60)
+
+    # Start IMU receiver if enabled
+    imu_source = None
+    if config.imu_enabled:
+        from src.sources.imu_source import IMUSource
+        imu_source = IMUSource(config)
+        if not imu_source.start():
+            logger.error("Failed to start IMU receiver on port %d. Continuing in camera-only mode.",
+                         config.imu_port)
+            imu_source = None
+        else:
+            logger.info("IMU receiver ready on UDP :%d — waiting for sensor connections...",
+                        config.imu_port)
 
     # Auto-open browser after short delay
     def open_browser():
@@ -92,7 +113,7 @@ Examples:
 
     # Start server (blocking)
     from src.server import run_server
-    run_server(config)
+    run_server(config, imu_source=imu_source)
 
 
 if __name__ == "__main__":

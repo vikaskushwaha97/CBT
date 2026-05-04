@@ -36,6 +36,7 @@ _latest_frame_b64 = None
 _pipeline: Optional[TrackingPipeline] = None
 _camera: Optional[CameraCapture] = None
 _config: Optional[AppConfig] = None
+_imu_source = None          # Optional[IMUSource]
 _running = False
 _lock = threading.Lock()
 _capture_errors = 0
@@ -196,7 +197,7 @@ async def startup():
     if _config is None:
         _config = AppConfig()
 
-    _pipeline = TrackingPipeline(_config)
+    _pipeline = TrackingPipeline(_config, imu_source=_imu_source)
     _camera = CameraCapture(_config)
     _camera.open()
     _running = True
@@ -310,10 +311,11 @@ async def _handle_command(msg: str, ws: WebSocket):
         logger.warning("Command error: %s", e)
 
 
-def run_server(config: AppConfig):
+def run_server(config: AppConfig, imu_source=None):
     """Start the uvicorn server."""
-    global _config
+    global _config, _imu_source
     _config = config
+    _imu_source = imu_source
     uvicorn.run(
         "src.server:app",
         host=config.server_host,
