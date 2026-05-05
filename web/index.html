@@ -23,9 +23,10 @@
                 </svg>
             </div>
             <h1>Camera FBT</h1>
-            <span class="version-badge">v1.0</span>
+            <span class="version-badge">v2.0</span>
         </div>
         <div class="header-right">
+            <span class="mode-badge" id="mode-badge">Camera Only</span>
             <div class="status-dot" id="connection-dot"></div>
             <span id="connection-text">Connecting…</span>
         </div>
@@ -126,6 +127,21 @@
                     <label>Responsiveness</label>
                     <input type="range" id="filter-beta" min="0.0" max="0.1" step="0.001" value="0.007">
                     <span class="slider-val" id="beta-val">0.007</span>
+                </div>
+            </div>
+
+            <!-- IMU Sensors -->
+            <div class="control-group" id="imu-panel">
+                <h3>IMU Sensors
+                    <span class="imu-count-badge" id="imu-count-badge">0 / 0</span>
+                </h3>
+                <div class="sensor-list" id="sensor-list">
+                    <div class="sensor-empty" id="sensor-empty">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                        <span>No sensors — start with <code>--imu</code></span>
+                    </div>
                 </div>
             </div>
 

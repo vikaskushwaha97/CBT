@@ -115,6 +115,10 @@
         metrics.updatePersons(data.num_persons || 0);
         metrics.updateCalibration(data.calibrated || false);
 
+        // IMU sensor panel
+        metrics.updateIMUSensors(data.sensors || [], data.imu_active || false);
+        metrics.updateMode(data.imu_active || false);
+
         // Tracker status (from primary person)
         if (data.persons && data.persons.length > 0) {
             metrics.updateTrackers(data.persons[0].trackers);

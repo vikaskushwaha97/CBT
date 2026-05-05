@@ -482,3 +482,137 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .status-dot.connected { animation: pulse-glow 2s infinite; }
+
+/* ── Mode Badge ──────────────────────────────────────────────────────────── */
+.mode-badge {
+    font-size: 0.68rem;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 3px 10px;
+    border-radius: 99px;
+    transition: all 0.4s ease;
+    letter-spacing: 0.03em;
+}
+
+/* ── IMU Sensor Panel ────────────────────────────────────────────────────── */
+.control-group h3 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.imu-count-badge {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #6b7280;
+    background: rgba(255,255,255,0.04);
+    padding: 2px 8px;
+    border-radius: 99px;
+    letter-spacing: 0.04em;
+    transition: color 0.3s;
+}
+
+.sensor-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Empty state */
+.sensor-empty {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.02);
+    border: 1px dashed rgba(255,255,255,0.07);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+.sensor-empty svg { opacity: 0.35; flex-shrink: 0; }
+.sensor-empty code {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    background: rgba(255,255,255,0.06);
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--accent-cyan);
+}
+
+/* Per-sensor card */
+.sensor-card {
+    display: grid;
+    grid-template-columns: 12px 1fr auto auto auto;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-sm);
+    font-size: 0.74rem;
+    transition: all 0.3s ease;
+    animation: slideIn 0.3s ease;
+}
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+.sensor-card.sensor-connected {
+    border-color: rgba(34,197,94,0.2);
+    background: rgba(34,197,94,0.05);
+}
+.sensor-card.sensor-disconnected {
+    border-color: rgba(239,68,68,0.15);
+    opacity: 0.6;
+}
+
+.sensor-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: all 0.3s;
+}
+.sensor-dot.sensor-ok {
+    background: var(--accent-green);
+    box-shadow: 0 0 8px rgba(34,197,94,0.5);
+    animation: pulse-glow 2s infinite;
+}
+.sensor-dot.sensor-lost {
+    background: var(--accent-red);
+    box-shadow: none;
+}
+
+.sensor-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.sensor-id {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.05);
+    padding: 1px 5px;
+    border-radius: 4px;
+}
+.sensor-lat {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--accent-cyan);
+    min-width: 40px;
+    text-align: right;
+}
+.sensor-pkts {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    min-width: 36px;
+    text-align: right;
+}
+
